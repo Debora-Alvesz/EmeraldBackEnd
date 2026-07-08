@@ -8,69 +8,60 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/usuarios")
-@RequiredArgsConstructor // Injeta o UsuarioService automaticamente via construtor do Lombok
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    // Rota para cadastrar um novo usuário (Sempre receberá o perfil padrão "USER")
     @PostMapping
-    public ResponseEntity<UsuarioResponseDTO> criar(@Valid @RequestBody UsuarioRequestDTO request) {
-        UsuarioResponseDTO novoUsuario = usuarioService.criar(request);
-        // Retorna Status 201 Created com o usuário recém-criado
+    public ResponseEntity<UsuarioResponseDTO> save(@Valid @RequestBody UsuarioRequestDTO request) {
+        // Realiza a persistência de um novo usuário com perfil básico no sistema.
+        UsuarioResponseDTO novoUsuario = usuarioService.save(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoUsuario);
     }
 
-    // Rota de autenticação (+ autenticar do seu diagrama) para o React fazer login
     @PostMapping("/login")
     public ResponseEntity<UsuarioResponseDTO> autenticar(@Valid @RequestBody LoginRequestDTO loginRequest) {
+        // Processa o fluxo de autenticação e validação cadastral de credenciais de acesso.
         UsuarioResponseDTO usuarioAutenticado = usuarioService.autenticar(loginRequest);
-        // Retorna Status 200 OK caso as credenciais estejam corretas
         return ResponseEntity.ok(usuarioAutenticado);
     }
 
-    // Rota para listar todos os usuários cadastrados
     @GetMapping
-    public ResponseEntity<List<UsuarioResponseDTO>> buscarTodos() {
-        List<UsuarioResponseDTO> usuarios = usuarioService.buscarTodos();
+    public ResponseEntity<List<UsuarioResponseDTO>> findAll() {
+        // Retorna a listagem completa de todos os usuários registrados na base de dados.
+        List<UsuarioResponseDTO> usuarios = usuarioService.findAll();
         return ResponseEntity.ok(usuarios);
     }
 
-    // Rota para buscar um usuário específico pelo ID (usando UUID)
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> buscarPorId(@PathVariable UUID id) {
-        UsuarioResponseDTO usuario = usuarioService.buscarPorId(id);
+    public ResponseEntity<UsuarioResponseDTO> findById(@PathVariable UUID id) {
+        // Busca as propriedades e dados detalhados de um usuário específico por meio do ID.
+        UsuarioResponseDTO usuario = usuarioService.findById(id);
         return ResponseEntity.ok(usuario);
     }
 
-    // Rota para atualizar os dados de um usuário existente
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> atualizar(
+    public ResponseEntity<UsuarioResponseDTO> update(
             @PathVariable UUID id,
             @Valid @RequestBody UsuarioRequestDTO request) {
-        UsuarioResponseDTO usuarioAtualizado = usuarioService.atualizar(id, request);
+        // Atualiza as informações cadastrais e dados de login de um usuário existente.
+        UsuarioResponseDTO usuarioAtualizado = usuarioService.update(id, request);
         return ResponseEntity.ok(usuarioAtualizado);
     }
 
-    // Rota para deletar um usuário do sistema
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable UUID id) {
-        usuarioService.deletar(id);
-        // Retorna Status 204 No Content (Sucesso, sem corpo de resposta)
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        // Remove fisicamente o registro de um usuário da base de dados do sistema.
+        usuarioService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

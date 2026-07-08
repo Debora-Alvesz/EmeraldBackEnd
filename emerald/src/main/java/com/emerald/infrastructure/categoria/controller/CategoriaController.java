@@ -7,14 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,40 +19,61 @@ public class CategoriaController {
 
     private final CategoriaService categoriaService;
 
-    // Rota para criar uma nova categoria personalizada para um usuário específico
+    // Cria uma nova categoria
     @PostMapping
-    public ResponseEntity<CategoriaResponseDTO> criar(@Valid @RequestBody CategoriaRequestDTO request) {
-        CategoriaResponseDTO novaCategoria = categoriaService.criar(request);
+    public ResponseEntity<CategoriaResponseDTO> save(
+            @Valid @RequestBody CategoriaRequestDTO request) {
+
+        CategoriaResponseDTO novaCategoria = categoriaService.save(request);
+
+        // Retorna status 201 (CREATED) com o objeto criado
         return ResponseEntity.status(HttpStatus.CREATED).body(novaCategoria);
     }
 
-    // Rota para listar todas as categorias que pertencem estritamente a um usuário específico
+    // Retorna todas as categorias de um usuário específico
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<List<CategoriaResponseDTO>> buscarPorUsuario(@PathVariable UUID usuarioId) {
-        List<CategoriaResponseDTO> categorias = categoriaService.buscarPorUsuario(usuarioId);
+    public ResponseEntity<List<CategoriaResponseDTO>> findByUsuarioId(
+            @PathVariable UUID usuarioId) {
+
+        List<CategoriaResponseDTO> categorias = categoriaService.findByUsuarioId(usuarioId);
+
         return ResponseEntity.ok(categorias);
     }
 
-    // Rota para buscar os detalhes de uma única categoria pelo seu ID exclusivo
-    @GetMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> buscarPorId(@PathVariable UUID id) {
-        CategoriaResponseDTO categoria = categoriaService.buscarPorId(id);
+    // Busca uma categoria específica pelo ID
+    // O id e o usuarioId vêm pela URL para validação de segurança
+    @GetMapping("/{id}/usuario/{usuarioId}")
+    public ResponseEntity<CategoriaResponseDTO> findById(
+            @PathVariable UUID id,
+            @PathVariable UUID usuarioId) {
+
+        CategoriaResponseDTO categoria = categoriaService.findById(id, usuarioId);
+
         return ResponseEntity.ok(categoria);
     }
 
-    // Rota para atualizar o nome descritivo ou o tipo da categoria (RECEITA/DESPESA)
-    @PutMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> atualizar(
+    // Atualiza uma categoria existente
+    @PutMapping("/{id}/usuario/{usuarioId}")
+    public ResponseEntity<CategoriaResponseDTO> update(
             @PathVariable UUID id,
+            @PathVariable UUID usuarioId,
             @Valid @RequestBody CategoriaRequestDTO request) {
-        CategoriaResponseDTO categoriaAtualizada = categoriaService.atualizar(id, request);
+
+        CategoriaResponseDTO categoriaAtualizada =
+                categoriaService.update(id, usuarioId, request);
+
         return ResponseEntity.ok(categoriaAtualizada);
     }
 
-    // Rota para excluir uma categoria permanentemente
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable UUID id) {
-        categoriaService.excluir(id);
+    // Remove uma categoria
+    @DeleteMapping("/{id}/usuario/{usuarioId}")
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id,
+            @PathVariable UUID usuarioId) {
+
+        categoriaService.delete(id, usuarioId);
+
+        // Retorna status 204 (NO CONTENT), indicando sucesso sem corpo na resposta
         return ResponseEntity.noContent().build();
     }
 }

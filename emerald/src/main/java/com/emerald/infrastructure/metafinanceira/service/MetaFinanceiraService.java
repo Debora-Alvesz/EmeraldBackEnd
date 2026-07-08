@@ -28,11 +28,12 @@ public class MetaFinanceiraService {
     private final MetaFinanceiraMapper metaFinanceiraMapper;
 
     @Transactional
-    public MetaFinanceiraResponseDTO criar(MetaFinanceiraRequestDTO request) {
-        // Valida se o usuário e a categoria existem antes de salvar a nova meta
+    public MetaFinanceiraResponseDTO save(MetaFinanceiraRequestDTO request) {
+        // Valida a existência do usuário associado à nova meta financeira.
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o ID fornecido."));
 
+        // Valida a existência da categoria associada à nova meta financeira.
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new BusinessException("Categoria não encontrada com o ID fornecido."));
 
@@ -45,34 +46,43 @@ public class MetaFinanceiraService {
     }
 
     @Transactional(readOnly = true)
-    public List<MetaFinanceiraResponseDTO> buscarPorUsuario(UUID usuarioId) {
-        // Recupera todas as metas cadastradas para um usuário específico
+    public List<MetaFinanceiraResponseDTO> findByUsuarioId(UUID usuarioId) {
+        // Recupera todas as metas financeiras pertencentes a um determinado usuário.
         return metaFinanceiraRepository.findByUsuarioId(usuarioId).stream()
                 .map(metaFinanceiraMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public List<MetaFinanceiraResponseDTO> buscarPorUsuarioEPeriodo(UUID usuarioId, String mesAno) {
-        // Filtra as metas de um usuário por um mês e ano específicos (ex: "07/2026")
+    public List<MetaFinanceiraResponseDTO> findByUsuarioIdAndMesAno(UUID usuarioId, String mesAno) {
+        // Filtra o planejamento de metas de um usuário baseado em um período específico.
         return metaFinanceiraRepository.findByUsuarioIdAndMesAno(usuarioId, mesAno).stream()
                 .map(metaFinanceiraMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public MetaFinanceiraResponseDTO buscarPorId(UUID id) {
-        // Busca os detalhes de uma meta específica através do seu ID único
+    public MetaFinanceiraResponseDTO findById(UUID id, UUID usuarioId) {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Meta financeira não encontrada com o ID: " + id));
+
+        // Verifica a titularidade da meta para evitar acesso cruzado indevido entre usuários.
+        if (!meta.getUsuario().getId().equals(usuarioId)) {
+            throw new BusinessException("Acesso negado: Permissão insuficiente para acessar esta meta.");
+        }
+
         return metaFinanceiraMapper.toResponseDto(meta);
     }
 
     @Transactional
-    public MetaFinanceiraResponseDTO atualizar(UUID id, MetaFinanceiraRequestDTO request) {
-        // Atualiza os valores limites e a categoria vinculada de uma meta existente
+    public MetaFinanceiraResponseDTO update(UUID id, UUID usuarioId, MetaFinanceiraRequestDTO request) {
         MetaFinanceira metaExistente = metaFinanceiraRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Meta financeira não encontrada com o ID: " + id));
+
+        // Valida a propriedade da meta antes de autorizar modificações cadastrais.
+        if (!metaExistente.getUsuario().getId().equals(usuarioId)) {
+            throw new BusinessException("Acesso negado: Permissão insuficiente para alterar esta meta.");
+        }
 
         Categoria novaCategoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new BusinessException("Categoria não encontrada com o ID fornecido."));
@@ -86,35 +96,46 @@ public class MetaFinanceiraService {
     }
 
     @Transactional
-    public void excluir(UUID id) {
-        // Remove permanentemente uma meta do banco de dados pelo ID
+    public void delete(UUID id, UUID usuarioId) {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Meta financeira não encontrada com o ID: " + id));
+
+        // Restringe a operação de remoção física apenas ao usuário proprietário do registro.
+        if (!meta.getUsuario().getId().equals(usuarioId)) {
+            throw new BusinessException("Acesso negado: Permissão insuficiente para excluir esta meta.");
+        }
+
         metaFinanceiraRepository.delete(meta);
     }
 
-    // MÉTODO DO DIAGRAMA
     @Transactional(readOnly = true)
-    public Double calcularProgressoDaMeta(UUID id) {
-        // Calcula a porcentagem consumida do limite da meta (inicia em 0.0)
+    public Double calcularProgressoDaMeta(UUID id, UUID usuarioId) {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Meta não encontrada."));
 
-        // TODO: Buscar soma das parcelas da classe Transacao futuramente
+        // Protege a leitura de dados estratégicos contra acessos externos maliciosos.
+        if (!meta.getUsuario().getId().equals(usuarioId)) {
+            throw new BusinessException("Acesso negado: Permissão insuficiente para calcular dados desta meta.");
+        }
+
+        // TODO: Implementação pendente até a conclusão e integração do módulo de Transações.
         Double totalGasto = 0.0;
 
         if (meta.getValorLimite() == 0) return 0.0;
         return (totalGasto / meta.getValorLimite()) * 100.0;
     }
 
-    // MÉTODO DO DIAGRAMA
     @Transactional(readOnly = true)
-    public String emitirAlertaDeEstouro(UUID id) {
-        // Verifica o teto de gastos e retorna uma mensagem de aviso caso ultrapasse o limite
+    public String emitirAlertaDeEstouro(UUID id, UUID usuarioId) {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Meta não encontrada."));
 
-        // TODO: Buscar soma das parcelas da classe Transacao futuramente
+        // Protege a leitura de dados estratégicos contra acessos externos maliciosos.
+        if (!meta.getUsuario().getId().equals(usuarioId)) {
+            throw new BusinessException("Acesso negado: Permissão insuficiente para verificar dados desta meta.");
+        }
+
+        // TODO: Implementação pendente até a conclusão e integração do módulo de Transações.
         Double totalGasto = 0.0;
 
         if (totalGasto > meta.getValorLimite()) {

@@ -7,62 +7,58 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/perfis")
-@CrossOrigin(origins = "*") // Evita o bloqueio de requisições (CORS) quando o front-end tentar se conectar
-@RequiredArgsConstructor // Injeta automaticamente o PerfilService via construtor em tempo de compilação
+@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class PerfilController {
 
     private final PerfilService perfilService;
 
     @PostMapping
-    // @Valid: Intercepta a requisição e valida o DTO antes de executar o método. Se falhar, barra aqui.
-    public ResponseEntity<PerfilResponseDTO> criar(@RequestBody @Valid PerfilRequestDTO request) {
-        PerfilResponseDTO response = perfilService.criar(request);
+    public ResponseEntity<PerfilResponseDTO> save(@RequestBody @Valid PerfilRequestDTO request) {
+        // Realiza a persistência de um novo perfil de acesso no sistema global.
+        PerfilResponseDTO response = perfilService.save(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<PerfilResponseDTO>> buscarTodos() {
-        List<PerfilResponseDTO> perfis = perfilService.buscarTodos();
+    public ResponseEntity<List<PerfilResponseDTO>> findAll() {
+        // Retorna a listagem completa de todos os perfis cadastrados na base de dados.
+        List<PerfilResponseDTO> perfis = perfilService.findAll();
         return ResponseEntity.ok(perfis);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PerfilResponseDTO> buscarPorId(@PathVariable Long id) {
-        PerfilResponseDTO response = perfilService.buscarPorId(id);
+    public ResponseEntity<PerfilResponseDTO> findById(@PathVariable Long id) {
+        // Busca os detalhes e propriedades de um perfil específico através do ID.
+        PerfilResponseDTO response = perfilService.findById(id);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PerfilResponseDTO> atualizar(
+    public ResponseEntity<PerfilResponseDTO> update(
             @PathVariable Long id,
             @RequestBody @Valid PerfilRequestDTO request) {
-        PerfilResponseDTO response = perfilService.atualizar(id, request);
+        // Atualiza a parametrização ou nomenclatura de um perfil global existente.
+        PerfilResponseDTO response = perfilService.update(id, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    // Retorna HTTP 204 (No Content), que é o padrão sem corpo de resposta para deleções com sucesso
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        perfilService.deletar(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        // Remove fisicamente um perfil de acesso do banco de dados do sistema.
+        perfilService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/permissoes")
     public ResponseEntity<List<String>> obterPermissoes(@PathVariable Long id) {
+        // Consulta e exporta a listagem de escopos autorizados para o perfil informado.
         List<String> permissoes = perfilService.obterPermissoes(id);
         return ResponseEntity.ok(permissoes);
     }

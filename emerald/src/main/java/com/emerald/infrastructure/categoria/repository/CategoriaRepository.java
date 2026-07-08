@@ -10,10 +10,7 @@ import java.util.UUID;
 @Repository
 public interface CategoriaRepository extends JpaRepository<Categoria, UUID> {
 
-    /**
-     * Busca todas as categorias associadas a um usuário específico.
-     * Garante que um usuário nunca acesse ou
-     * utilize as categorias personalizadas de outro usuário do sistema.
-     */
+// Busca todas as categorias vinculadas a um determinado usuário
+// Utilizado para garantir isolamento de dados (cada usuário acessa apenas suas categorias)
     List<Categoria> findByUsuarioId(UUID usuarioId);
 }

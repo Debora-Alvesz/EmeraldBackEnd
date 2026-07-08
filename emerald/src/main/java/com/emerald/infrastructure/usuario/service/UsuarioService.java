@@ -26,42 +26,32 @@ public class UsuarioService {
     private final UsuarioMapper usuarioMapper;
 
     @Transactional
-    public UsuarioResponseDTO criar(UsuarioRequestDTO request) {
-        // Valida se o e-mail já está cadastrado
+    public UsuarioResponseDTO save(UsuarioRequestDTO request) {
+        // Impede a criação de registros duplicados utilizando o mesmo endereço de e-mail.
         if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BusinessException("Já existe um usuário cadastrado com este e-mail.");
         }
 
         Usuario usuario = usuarioMapper.toEntity(request);
-
-        // Método do seu diagrama executado de forma interna e segura
         atribuirPerfilPadrao(usuario);
 
         Usuario usuarioSalvo = usuarioRepository.save(usuario);
         return usuarioMapper.toResponseDto(usuarioSalvo);
     }
 
-    /**
-     * Método do seu diagrama (- atribuirPerfilPadrao)
-     * Como ele é privado (-), roda internamente no Service blindando a escolha do perfil.
-     */
     private void atribuirPerfilPadrao(Usuario usuario) {
+        // Associa o escopo básico de permissões do sistema a novos usuários cadastrados de forma automática.
         Perfil perfilPadrao = perfilRepository.findByNomePerfil("USER")
                 .orElseThrow(() -> new BusinessException("Erro interno: O perfil padrão 'USER' não foi inicializado no banco."));
         usuario.setPerfil(perfilPadrao);
     }
 
-    /**
-     * Método do seu diagrama (+ autenticar)
-     * Realiza o login validando e-mail e senha.
-     */
     @Transactional(readOnly = true)
     public UsuarioResponseDTO autenticar(LoginRequestDTO loginRequest) {
-        // Busca o usuário pelo e-mail
+        // Valida as credenciais de acesso informadas contra os registros armazenados no banco de dados.
         Usuario usuario = usuarioRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new BusinessException("Credenciais inválidas. E-mail ou senha incorretos."));
 
-        // Valida a senha (Em texto limpo por enquanto. Quando colocar o BCrypt, mudará para passwordEncoder.matches)
         if (!usuario.getSenha().equals(loginRequest.getSenha())) {
             throw new BusinessException("Credenciais inválidas. E-mail ou senha incorretos.");
         }
@@ -70,25 +60,28 @@ public class UsuarioService {
     }
 
     @Transactional(readOnly = true)
-    public List<UsuarioResponseDTO> buscarTodos() {
+    public List<UsuarioResponseDTO> findAll() {
+        // Recupera a listagem completa de todos os usuários registrados no sistema.
         return usuarioRepository.findAll().stream()
                 .map(usuarioMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public UsuarioResponseDTO buscarPorId(UUID id) {
+    public UsuarioResponseDTO findById(UUID id) {
+        // Localiza as propriedades cadastrais de um determinado usuário por meio do seu ID único.
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o ID: " + id));
         return usuarioMapper.toResponseDto(usuario);
     }
 
     @Transactional
-    public UsuarioResponseDTO atualizar(UUID id, UsuarioRequestDTO request) {
+    public UsuarioResponseDTO update(UUID id, UsuarioRequestDTO request) {
+        // Verifica a existência do usuário para validação e modificação do estado da entidade.
         Usuario usuarioExistente = usuarioRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o ID: " + id));
 
-        // Se alterou o e-mail, verifica se o novo e-mail já pertence a outro usuário
+        // Impede a colisão cadastral caso o novo e-mail sugerido já pertença a outra conta.
         usuarioRepository.findByEmail(request.getEmail())
                 .ifPresent(usuarioComMesmoEmail -> {
                     if (!usuarioComMesmoEmail.getId().equals(id)) {
@@ -98,14 +91,15 @@ public class UsuarioService {
 
         usuarioExistente.setNome(request.getNome());
         usuarioExistente.setEmail(request.getEmail());
-        usuarioExistente.setSenha(request.getSenha()); // Atualiza a senha
+        usuarioExistente.setSenha(request.getSenha());
 
         Usuario usuarioAtualizado = usuarioRepository.save(usuarioExistente);
         return usuarioMapper.toResponseDto(usuarioAtualizado);
     }
 
     @Transactional
-    public void deletar(UUID id) {
+    public void delete(UUID id) {
+        // Remove fisicamente o registro do usuário da base de dados se localizado pelo ID.
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o ID: " + id));
         usuarioRepository.delete(usuario);

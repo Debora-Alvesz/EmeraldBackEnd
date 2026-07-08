@@ -1,6 +1,6 @@
 package com.emerald.infrastructure.perfil.service;
 
-import com.emerald.infrastructure.exception.BusinessException; // Pacote que criaremos no próximo passo
+import com.emerald.infrastructure.exception.BusinessException;
 import com.emerald.infrastructure.perfil.dto.PerfilRequestDTO;
 import com.emerald.infrastructure.perfil.dto.PerfilResponseDTO;
 import com.emerald.infrastructure.perfil.entity.Perfil;
@@ -22,8 +22,8 @@ public class PerfilService {
     private final PerfilMapper perfilMapper;
 
     @Transactional
-    public PerfilResponseDTO criar(PerfilRequestDTO request) {
-        // Verifica se já existe um perfil com esse nome ("ADMIN" ou "USER")
+    public PerfilResponseDTO save(PerfilRequestDTO request) {
+        // Impede a duplicação de registros de perfil com o mesmo nome identificador.
         if (perfilRepository.findByNomePerfil(request.getNomePerfil()).isPresent()) {
             throw new BusinessException("Já existe um perfil cadastrado com este nome.");
         }
@@ -35,7 +35,8 @@ public class PerfilService {
     }
 
     @Transactional(readOnly = true)
-    public List<PerfilResponseDTO> buscarTodos() {
+    public List<PerfilResponseDTO> findAll() {
+        // Recupera a listagem completa de todos os perfis parametrizados no sistema.
         List<Perfil> perfis = perfilRepository.findAll();
         return perfis.stream()
                 .map(perfilMapper::toResponseDto)
@@ -43,7 +44,8 @@ public class PerfilService {
     }
 
     @Transactional(readOnly = true)
-    public PerfilResponseDTO buscarPorId(Long id) {
+    public PerfilResponseDTO findById(Long id) {
+        // Busca as propriedades de um perfil específico mapeado pelo identificador único.
         Perfil perfil = perfilRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Perfil não encontrado com o ID: " + id));
 
@@ -51,11 +53,12 @@ public class PerfilService {
     }
 
     @Transactional
-    public PerfilResponseDTO atualizar(Long id, PerfilRequestDTO request) {
+    public PerfilResponseDTO update(Long id, PerfilRequestDTO request) {
+        // Localiza o perfil existente para validação de integridade dos dados cadastrais.
         Perfil perfilExistente = perfilRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Perfil não encontrado com o ID: " + id));
 
-        // Verifica se o novo nome que estão tentando colocar já pertence a outro perfil
+        // Impede que a alteração de nome resulte em duplicidade de registros globais no banco.
         perfilRepository.findByNomePerfil(request.getNomePerfil())
                 .ifPresent(perfilComMesmoNome -> {
                     if (!perfilComMesmoNome.getId().equals(id)) {
@@ -70,7 +73,8 @@ public class PerfilService {
     }
 
     @Transactional
-    public void deletar(Long id) {
+    public void delete(Long id) {
+        // Remove fisicamente o registro de perfil da base de dados se localizado pelo ID.
         Perfil perfil = perfilRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Perfil não encontrado com o ID: " + id));
 
@@ -79,6 +83,7 @@ public class PerfilService {
 
     @Transactional(readOnly = true)
     public List<String> obterPermissoes(Long id) {
+        // Mapeia e retorna os escopos e autorizações atrelados ao perfil solicitado.
         Perfil perfil = perfilRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Perfil não encontrado com o ID: " + id));
 
