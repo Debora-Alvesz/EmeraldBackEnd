@@ -15,6 +15,7 @@ import com.emerald.infrastructure.transacao.repository.TransacaoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 
 import java.util.Date;
 import java.util.List;
@@ -100,14 +101,16 @@ public class TransacaoService implements TransacaoIService {
 
     // Atualiza o saldo somando o valor recebido (soma tanto receitas positivas quanto despesas negativas)
     private void efetivarTransacao(ContaBancaria conta, Double valor) {
-        Double novoSaldo = conta.getSaldo() + valor;
+        BigDecimal valorTransacao = BigDecimal.valueOf(valor);
+        BigDecimal novoSaldo = conta.getSaldo().add(valorTransacao);
         conta.setSaldo(novoSaldo);
         contaBancariaRepository.save(conta);
     }
 
     // Reverte o impacto financeiro de uma transação excluída subtraindo seu valor do saldo da conta
     private void estornarTransacao(ContaBancaria conta, Double valor) {
-        Double novoSaldo = conta.getSaldo() - valor;
+        BigDecimal valorTransacao = BigDecimal.valueOf(valor);
+        BigDecimal novoSaldo = conta.getSaldo().subtract(valorTransacao);
         conta.setSaldo(novoSaldo);
         contaBancariaRepository.save(conta);
     }

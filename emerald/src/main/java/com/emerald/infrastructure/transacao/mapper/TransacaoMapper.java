@@ -38,7 +38,7 @@ public class TransacaoMapper {
         // Mapeamento seguro das informações da Conta Bancária associada
         if (transacao.getContaBancaria() != null) {
             dto.setContaBancariaId(transacao.getContaBancaria().getId());
-            dto.setNomeContaBancaria(transacao.getContaBancaria().getNome());
+            dto.setNomeContaBancaria(transacao.getContaBancaria().getNomeConta());
         }
 
         // Mapeamento seguro das informações da Categoria associada
