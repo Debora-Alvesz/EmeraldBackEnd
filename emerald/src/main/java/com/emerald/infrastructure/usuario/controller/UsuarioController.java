@@ -3,7 +3,7 @@ package com.emerald.infrastructure.usuario.controller;
 import com.emerald.infrastructure.usuario.dto.LoginRequestDTO;
 import com.emerald.infrastructure.usuario.dto.UsuarioRequestDTO;
 import com.emerald.infrastructure.usuario.dto.UsuarioResponseDTO;
-import com.emerald.infrastructure.usuario.service.UsuarioService;
+import com.emerald.infrastructure.usuario.service.UsuarioIService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+    private final UsuarioIService usuarioService;
 
     @PostMapping
     public ResponseEntity<UsuarioResponseDTO> save(@Valid @RequestBody UsuarioRequestDTO request) {

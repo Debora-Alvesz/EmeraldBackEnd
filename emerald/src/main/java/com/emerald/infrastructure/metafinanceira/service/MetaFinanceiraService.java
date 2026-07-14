@@ -20,13 +20,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class MetaFinanceiraService {
+public class MetaFinanceiraService implements MetaFinanceiraIService {
 
     private final MetaFinanceiraRepository metaFinanceiraRepository;
     private final UsuarioRepository usuarioRepository;
     private final CategoriaRepository categoriaRepository;
     private final MetaFinanceiraMapper metaFinanceiraMapper;
 
+    @Override
     @Transactional
     public MetaFinanceiraResponseDTO save(MetaFinanceiraRequestDTO request) {
         // Valida a existência do usuário associado à nova meta financeira.
@@ -45,6 +46,7 @@ public class MetaFinanceiraService {
         return metaFinanceiraMapper.toResponseDto(metaSalva);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MetaFinanceiraResponseDTO> findByUsuarioId(UUID usuarioId) {
         // Recupera todas as metas financeiras pertencentes a um determinado usuário.
@@ -53,6 +55,7 @@ public class MetaFinanceiraService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MetaFinanceiraResponseDTO> findByUsuarioIdAndMesAno(UUID usuarioId, String mesAno) {
         // Filtra o planejamento de metas de um usuário baseado em um período específico.
@@ -61,6 +64,7 @@ public class MetaFinanceiraService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public MetaFinanceiraResponseDTO findById(UUID id, UUID usuarioId) {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
@@ -74,6 +78,7 @@ public class MetaFinanceiraService {
         return metaFinanceiraMapper.toResponseDto(meta);
     }
 
+    @Override
     @Transactional
     public MetaFinanceiraResponseDTO update(UUID id, UUID usuarioId, MetaFinanceiraRequestDTO request) {
         MetaFinanceira metaExistente = metaFinanceiraRepository.findById(id)
@@ -95,6 +100,7 @@ public class MetaFinanceiraService {
         return metaFinanceiraMapper.toResponseDto(metaAtualizada);
     }
 
+    @Override
     @Transactional
     public void delete(UUID id, UUID usuarioId) {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
@@ -108,6 +114,7 @@ public class MetaFinanceiraService {
         metaFinanceiraRepository.delete(meta);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Double calcularProgressoDaMeta(UUID id, UUID usuarioId) {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
@@ -125,6 +132,7 @@ public class MetaFinanceiraService {
         return (totalGasto / meta.getValorLimite()) * 100.0;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public String emitirAlertaDeEstouro(UUID id, UUID usuarioId) {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)

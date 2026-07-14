@@ -20,15 +20,15 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ContaBancariaService {
+public class ContaBancariaService implements ContaBancariaIService {
 
     private final ContaBancariaRepository contaBancariaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ContaBancariaMapper contaBancariaMapper;
 
+    @Override
     @Transactional
     public ContaBancariaResponseDTO save(ContaBancariaRequestDTO request) {
-        // Valida se o usuário dono do vínculo realmente existe no banco de dados.
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o ID fornecido."));
 
@@ -39,6 +39,7 @@ public class ContaBancariaService {
         return contaBancariaMapper.toResponseDto(contaSalva);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<ContaBancariaResponseDTO> findByUsuarioId(UUID usuarioId) {
         return contaBancariaRepository.findByUsuarioId(usuarioId).stream()
@@ -46,12 +47,13 @@ public class ContaBancariaService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public ContaBancariaResponseDTO findById(UUID id, UUID usuarioId) {
         ContaBancaria conta = contaBancariaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Conta bancária não encontrada."));
 
-        // Bloqueia o acesso se o ID do usuário logado não bater com o dono do registro.
+        // Garante que o recurso pertence ao usuário solicitante para mitigar IDOR.
         if (!conta.getUsuario().getId().equals(usuarioId)) {
             throw new BusinessException("Acesso negado: Você não tem permissão para acessar esta conta.");
         }
@@ -59,12 +61,13 @@ public class ContaBancariaService {
         return contaBancariaMapper.toResponseDto(conta);
     }
 
+    @Override
     @Transactional
     public ContaBancariaResponseDTO update(UUID id, UUID usuarioId, ContaBancariaRequestDTO request) {
         ContaBancaria contaExistente = contaBancariaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Conta bancária não encontrada."));
 
-        // Bloqueia a alteração se o ID do usuário logado não for o dono do registro.
+        // Protege o recurso de alterações não autorizadas de terceiros.
         if (!contaExistente.getUsuario().getId().equals(usuarioId)) {
             throw new BusinessException("Acesso negado: Você não tem permissão para alterar esta conta.");
         }
@@ -83,12 +86,13 @@ public class ContaBancariaService {
         return contaBancariaMapper.toResponseDto(contaAtualizada);
     }
 
+    @Override
     @Transactional
     public void delete(UUID id, UUID usuarioId) {
         ContaBancaria conta = contaBancariaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Conta bancária não encontrada."));
 
-        // Bloqueia a exclusão se o ID do usuário logado não for o dono do registro.
+        // Permite a exclusão física somente se realizada pelo respectivo proprietário.
         if (!conta.getUsuario().getId().equals(usuarioId)) {
             throw new BusinessException("Acesso negado: Você não tem permissão para excluir esta conta.");
         }
@@ -96,9 +100,9 @@ public class ContaBancariaService {
         contaBancariaRepository.delete(conta);
     }
 
+    @Override
     @Transactional
     public void atualizarSaldo(UUID id, BigDecimal valor, String tipoTransacao) {
-        // Validação interna: impede cálculos ou mutações inconsistentes disparadas por transações.
         if (valor == null || tipoTransacao == null || valor.compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException("Dados inválidos para atualização de saldo.");
         }
@@ -118,17 +122,17 @@ public class ContaBancariaService {
         contaBancariaRepository.save(conta);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<String> obterExtratoMensal(UUID id, UUID usuarioId, Integer mes, Integer ano) {
         ContaBancaria conta = contaBancariaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Conta bancária não encontrada."));
 
-        // Verifica a titularidade do registro antes de autorizar a geração do relatório.
+        // Impede a leitura de histórico financeiro de contas de terceiros.
         if (!conta.getUsuario().getId().equals(usuarioId)) {
             throw new BusinessException("Acesso negado: Permissão insuficiente para extrair dados desta conta.");
         }
 
-        // TODO: Implementação pendente até a conclusão e integração do módulo de Transações.
         return new ArrayList<>();
     }
 }

@@ -2,7 +2,7 @@ package com.emerald.infrastructure.metafinanceira.controller;
 
 import com.emerald.infrastructure.metafinanceira.dto.MetaFinanceiraRequestDTO;
 import com.emerald.infrastructure.metafinanceira.dto.MetaFinanceiraResponseDTO;
-import com.emerald.infrastructure.metafinanceira.service.MetaFinanceiraService;
+import com.emerald.infrastructure.metafinanceira.service.MetaFinanceiraIService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MetaFinanceiraController {
 
-    private final MetaFinanceiraService metaFinanceiraService;
+    private final MetaFinanceiraIService metaFinanceiraService;
 
     @PostMapping
     public ResponseEntity<MetaFinanceiraResponseDTO> save(@Valid @RequestBody MetaFinanceiraRequestDTO request) {

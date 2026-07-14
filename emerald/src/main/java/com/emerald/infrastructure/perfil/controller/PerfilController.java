@@ -2,7 +2,7 @@ package com.emerald.infrastructure.perfil.controller;
 
 import com.emerald.infrastructure.perfil.dto.PerfilRequestDTO;
 import com.emerald.infrastructure.perfil.dto.PerfilResponseDTO;
-import com.emerald.infrastructure.perfil.service.PerfilService;
+import com.emerald.infrastructure.perfil.service.PerfilIService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PerfilController {
 
-    private final PerfilService perfilService;
+    private final PerfilIService perfilService;
 
     @PostMapping
     public ResponseEntity<PerfilResponseDTO> save(@RequestBody @Valid PerfilRequestDTO request) {

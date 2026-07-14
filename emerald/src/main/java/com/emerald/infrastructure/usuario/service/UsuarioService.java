@@ -19,12 +19,13 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UsuarioService {
+public class UsuarioService implements UsuarioIService {
 
     private final UsuarioRepository usuarioRepository;
     private final PerfilRepository perfilRepository;
     private final UsuarioMapper usuarioMapper;
 
+    @Override
     @Transactional
     public UsuarioResponseDTO save(UsuarioRequestDTO request) {
         // Impede a criação de registros duplicados utilizando o mesmo endereço de e-mail.
@@ -46,6 +47,7 @@ public class UsuarioService {
         usuario.setPerfil(perfilPadrao);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public UsuarioResponseDTO autenticar(LoginRequestDTO loginRequest) {
         // Valida as credenciais de acesso informadas contra os registros armazenados no banco de dados.
@@ -59,6 +61,7 @@ public class UsuarioService {
         return usuarioMapper.toResponseDto(usuario);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<UsuarioResponseDTO> findAll() {
         // Recupera a listagem completa de todos os usuários registrados no sistema.
@@ -67,6 +70,7 @@ public class UsuarioService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public UsuarioResponseDTO findById(UUID id) {
         // Localiza as propriedades cadastrais de um determinado usuário por meio do seu ID único.
@@ -75,6 +79,7 @@ public class UsuarioService {
         return usuarioMapper.toResponseDto(usuario);
     }
 
+    @Override
     @Transactional
     public UsuarioResponseDTO update(UUID id, UsuarioRequestDTO request) {
         // Verifica a existência do usuário para validação e modificação do estado da entidade.
@@ -97,6 +102,7 @@ public class UsuarioService {
         return usuarioMapper.toResponseDto(usuarioAtualizado);
     }
 
+    @Override
     @Transactional
     public void delete(UUID id) {
         // Remove fisicamente o registro do usuário da base de dados se localizado pelo ID.

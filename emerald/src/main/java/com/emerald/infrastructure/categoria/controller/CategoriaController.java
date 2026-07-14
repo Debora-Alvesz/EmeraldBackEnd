@@ -2,7 +2,7 @@ package com.emerald.infrastructure.categoria.controller;
 
 import com.emerald.infrastructure.categoria.dto.CategoriaRequestDTO;
 import com.emerald.infrastructure.categoria.dto.CategoriaResponseDTO;
-import com.emerald.infrastructure.categoria.service.CategoriaService;
+import com.emerald.infrastructure.categoria.service.CategoriaIService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,63 +17,50 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CategoriaController {
 
-    private final CategoriaService categoriaService;
+    private final CategoriaIService categoriaService;
 
-    // Cria uma nova categoria
     @PostMapping
     public ResponseEntity<CategoriaResponseDTO> save(
             @Valid @RequestBody CategoriaRequestDTO request) {
-
+        // Inicializa a criação e persistência de uma nova categoria.
         CategoriaResponseDTO novaCategoria = categoriaService.save(request);
-
-        // Retorna status 201 (CREATED) com o objeto criado
         return ResponseEntity.status(HttpStatus.CREATED).body(novaCategoria);
     }
 
-    // Retorna todas as categorias de um usuário específico
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<CategoriaResponseDTO>> findByUsuarioId(
             @PathVariable UUID usuarioId) {
-
+        // Lista todas as categorias vinculadas a um determinado ID de usuário.
         List<CategoriaResponseDTO> categorias = categoriaService.findByUsuarioId(usuarioId);
-
         return ResponseEntity.ok(categorias);
     }
 
-    // Busca uma categoria específica pelo ID
-    // O id e o usuarioId vêm pela URL para validação de segurança
     @GetMapping("/{id}/usuario/{usuarioId}")
     public ResponseEntity<CategoriaResponseDTO> findById(
             @PathVariable UUID id,
             @PathVariable UUID usuarioId) {
-
+        // Busca os dados de uma categoria de forma isolada e segura contra IDOR.
         CategoriaResponseDTO categoria = categoriaService.findById(id, usuarioId);
-
         return ResponseEntity.ok(categoria);
     }
 
-    // Atualiza uma categoria existente
     @PutMapping("/{id}/usuario/{usuarioId}")
     public ResponseEntity<CategoriaResponseDTO> update(
             @PathVariable UUID id,
             @PathVariable UUID usuarioId,
             @Valid @RequestBody CategoriaRequestDTO request) {
-
+        // Processa as atualizações de valores de uma categoria existente.
         CategoriaResponseDTO categoriaAtualizada =
                 categoriaService.update(id, usuarioId, request);
-
         return ResponseEntity.ok(categoriaAtualizada);
     }
 
-    // Remove uma categoria
     @DeleteMapping("/{id}/usuario/{usuarioId}")
     public ResponseEntity<Void> delete(
             @PathVariable UUID id,
             @PathVariable UUID usuarioId) {
-
+        // Realiza a deleção lógica ou física do recurso caso o usuário seja o dono.
         categoriaService.delete(id, usuarioId);
-
-        // Retorna status 204 (NO CONTENT), indicando sucesso sem corpo na resposta
         return ResponseEntity.noContent().build();
     }
 }

@@ -2,7 +2,7 @@ package com.emerald.infrastructure.contabancaria.controller;
 
 import com.emerald.infrastructure.contabancaria.dto.ContaBancariaRequestDTO;
 import com.emerald.infrastructure.contabancaria.dto.ContaBancariaResponseDTO;
-import com.emerald.infrastructure.contabancaria.service.ContaBancariaService;
+import com.emerald.infrastructure.contabancaria.service.ContaBancariaIService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ContaBancariaController {
 
-    private final ContaBancariaService contaBancariaService;
+    private final ContaBancariaIService contaBancariaService;
 
     @PostMapping
     public ResponseEntity<ContaBancariaResponseDTO> save(@Valid @RequestBody ContaBancariaRequestDTO request) {

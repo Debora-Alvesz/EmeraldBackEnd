@@ -16,11 +16,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PerfilService {
+public class PerfilService implements PerfilIService {
 
     private final PerfilRepository perfilRepository;
     private final PerfilMapper perfilMapper;
 
+    @Override
     @Transactional
     public PerfilResponseDTO save(PerfilRequestDTO request) {
         // Impede a duplicação de registros de perfil com o mesmo nome identificador.
@@ -34,6 +35,7 @@ public class PerfilService {
         return perfilMapper.toResponseDto(perfilSalvo);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<PerfilResponseDTO> findAll() {
         // Recupera a listagem completa de todos os perfis parametrizados no sistema.
@@ -43,6 +45,7 @@ public class PerfilService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public PerfilResponseDTO findById(Long id) {
         // Busca as propriedades de um perfil específico mapeado pelo identificador único.
@@ -52,6 +55,7 @@ public class PerfilService {
         return perfilMapper.toResponseDto(perfil);
     }
 
+    @Override
     @Transactional
     public PerfilResponseDTO update(Long id, PerfilRequestDTO request) {
         // Localiza o perfil existente para validação de integridade dos dados cadastrais.
@@ -72,6 +76,7 @@ public class PerfilService {
         return perfilMapper.toResponseDto(perfilAtualizado);
     }
 
+    @Override
     @Transactional
     public void delete(Long id) {
         // Remove fisicamente o registro de perfil da base de dados se localizado pelo ID.
@@ -81,6 +86,7 @@ public class PerfilService {
         perfilRepository.delete(perfil);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<String> obterPermissoes(Long id) {
         // Mapeia e retorna os escopos e autorizações atrelados ao perfil solicitado.
