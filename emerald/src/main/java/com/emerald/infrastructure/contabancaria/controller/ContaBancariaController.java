@@ -14,6 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/contas-bancarias")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class ContaBancariaController {
 
