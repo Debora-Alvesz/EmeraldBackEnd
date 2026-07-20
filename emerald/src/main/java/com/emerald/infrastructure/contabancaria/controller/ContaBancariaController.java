@@ -3,6 +3,7 @@ package com.emerald.infrastructure.contabancaria.controller;
 import com.emerald.infrastructure.contabancaria.dto.ContaBancariaRequestDTO;
 import com.emerald.infrastructure.contabancaria.dto.ContaBancariaResponseDTO;
 import com.emerald.infrastructure.contabancaria.service.ContaBancariaIService;
+import com.emerald.infrastructure.transacao.dto.TransacaoResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -63,13 +64,14 @@ public class ContaBancariaController {
     }
 
     @GetMapping("/{id}/usuario/{usuarioId}/extrato")
-    public ResponseEntity<List<String>> obterExtratoMensal(
+    public ResponseEntity<List<TransacaoResponseDTO>> obterExtratoMensal(
             @PathVariable UUID id,
             @PathVariable UUID usuarioId,
             @RequestParam Integer mes,
             @RequestParam Integer ano) {
-        // Operação em estágio de protótipo: aguarda a finalização das regras da entidade de transações.
-        List<String> extrato = contaBancariaService.obterExtratoMensal(id, usuarioId, mes, ano);
+
+        // metodo para extrato
+        List<TransacaoResponseDTO> extrato = contaBancariaService.obterExtratoMensal(id, usuarioId, mes, ano);
         return ResponseEntity.ok(extrato);
     }
 }

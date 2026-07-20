@@ -2,6 +2,7 @@ package com.emerald.infrastructure.contabancaria.service;
 
 import com.emerald.infrastructure.contabancaria.dto.ContaBancariaRequestDTO;
 import com.emerald.infrastructure.contabancaria.dto.ContaBancariaResponseDTO;
+import com.emerald.infrastructure.transacao.dto.TransacaoResponseDTO;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,5 +29,5 @@ public interface ContaBancariaIService {
     void atualizarSaldo(UUID id, BigDecimal valor, String tipoTransacao);
 
     // Gera um resumo ou extrato das movimentações mensais da conta.
-    List<String> obterExtratoMensal(UUID id, UUID usuarioId, Integer mes, Integer ano);
+    List<TransacaoResponseDTO> obterExtratoMensal(UUID id, UUID usuarioId, Integer mes, Integer ano);
 }

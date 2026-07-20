@@ -114,4 +114,40 @@ public class TransacaoService implements TransacaoIService {
         conta.setSaldo(novoSaldo);
         contaBancariaRepository.save(conta);
     }
+
+    @Override
+    @Transactional
+    public TransacaoResponseDTO update(UUID id, TransacaoRequestDTO request) {
+        // 1. Busca a transação existente no banco
+        Transacao transacaoExistente = transacaoRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Transação não encontrada para o ID: " + id));
+
+        // 2. Valida a existência das novas chaves estrangeiras informadas
+        ContaBancaria novaConta = contaBancariaRepository.findById(request.getContaBancariaId())
+                .orElseThrow(() -> new BusinessException("Conta bancária não encontrada para o ID: " + request.getContaBancariaId()));
+
+        Categoria novaCategoria = categoriaRepository.findById(request.getCategoriaId())
+                .orElseThrow(() -> new BusinessException("Categoria não encontrada para o ID: " + request.getCategoriaId()));
+
+        MetodoPagamento novoMetodo = metodoPagamentoRepository.findById(request.getMetodoPagamentoId())
+                .orElseThrow(() -> new BusinessException("Método de pagamento não encontrado para o ID: " + request.getMetodoPagamentoId()));
+
+        // 3. Estorna o valor antigo da conta antiga (desfaz o impacto da transação original)
+        estornarTransacao(transacaoExistente.getContaBancaria(), transacaoExistente.getValor());
+
+        // 4. Atualiza a entidade com os novos dados
+        transacaoExistente.setDescricao(request.getDescricao());
+        transacaoExistente.setValor(request.getValor());
+        transacaoExistente.setData(request.getData());
+        transacaoExistente.setContaBancaria(novaConta);
+        transacaoExistente.setCategoria(novaCategoria);
+        transacaoExistente.setMetodoPagamento(novoMetodo);
+
+        // 5. Efetiva a transação atualizada na conta correta (aplica o novo impacto)
+        efetivarTransacao(novaConta, transacaoExistente.getValor());
+
+        // 6. Salva no banco e converte para o DTO de resposta
+        Transacao transacaoAtualizada = transacaoRepository.save(transacaoExistente);
+        return transacaoMapper.toResponseDto(transacaoAtualizada);
+    }
 }

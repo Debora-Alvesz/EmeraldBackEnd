@@ -28,7 +28,7 @@ public class MetaFinanceiraController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<List<MetaFinanceiraResponseDTO>> findByUsuarioId(@PathVariable UUID usuarioId) {
+    public ResponseEntity<List<MetaFinanceiraResponseDTO>> findByUsuarioId(@PathVariable("usuarioId") UUID usuarioId){
         // Retorna a listagem de metas financeiras associadas a um identificador de usuário.
         List<MetaFinanceiraResponseDTO> metas = metaFinanceiraService.findByUsuarioId(usuarioId);
         return ResponseEntity.ok(metas);

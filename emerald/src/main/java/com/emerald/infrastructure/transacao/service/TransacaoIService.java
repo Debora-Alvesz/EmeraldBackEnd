@@ -23,4 +23,8 @@ public interface TransacaoIService {
 
     // Remove uma transação do sistema e estorna o seu valor no saldo da conta correspondente.
     void delete(UUID id);
+
+    // Atualiza os dados de uma transação existente e recalcula o saldo da conta.
+    TransacaoResponseDTO update(UUID id, TransacaoRequestDTO request);
+
 }

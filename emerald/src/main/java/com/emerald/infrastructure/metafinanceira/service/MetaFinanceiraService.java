@@ -8,6 +8,7 @@ import com.emerald.infrastructure.metafinanceira.dto.MetaFinanceiraResponseDTO;
 import com.emerald.infrastructure.metafinanceira.entity.MetaFinanceira;
 import com.emerald.infrastructure.metafinanceira.mapper.MetaFinanceiraMapper;
 import com.emerald.infrastructure.metafinanceira.repository.MetaFinanceiraRepository;
+import com.emerald.infrastructure.transacao.repository.TransacaoRepository;
 import com.emerald.infrastructure.usuario.entity.Usuario;
 import com.emerald.infrastructure.usuario.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class MetaFinanceiraService implements MetaFinanceiraIService {
     private final MetaFinanceiraRepository metaFinanceiraRepository;
     private final UsuarioRepository usuarioRepository;
     private final CategoriaRepository categoriaRepository;
+    private final TransacaoRepository transacaoRepository;
     private final MetaFinanceiraMapper metaFinanceiraMapper;
 
     @Override
@@ -120,13 +122,19 @@ public class MetaFinanceiraService implements MetaFinanceiraIService {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Meta não encontrada."));
 
-        // Protege a leitura de dados estratégicos contra acessos externos maliciosos.
         if (!meta.getUsuario().getId().equals(usuarioId)) {
             throw new BusinessException("Acesso negado: Permissão insuficiente para calcular dados desta meta.");
         }
 
-        // TODO: Implementação pendente até a conclusão e integração do módulo de Transações.
-        Double totalGasto = 0.0;
+        //Executa a soma delegada ao banco de dados através do repository de Transações
+        Double somaDespesas = transacaoRepository.somarDespesasPorCategoriaEMesAno(
+                usuarioId,
+                meta.getCategoria().getId(),
+                meta.getMesAno()
+        );
+
+        // 🔄 Transforma a soma de valores negativos em número absoluto (positivo) para a matemática do front-end
+        Double totalGasto = Math.abs(somaDespesas != null ? somaDespesas : 0.0);
 
         if (meta.getValorLimite() == 0) return 0.0;
         return (totalGasto / meta.getValorLimite()) * 100.0;
@@ -138,13 +146,17 @@ public class MetaFinanceiraService implements MetaFinanceiraIService {
         MetaFinanceira meta = metaFinanceiraRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Meta não encontrada."));
 
-        // Protege a leitura de dados estratégicos contra acessos externos maliciosos.
         if (!meta.getUsuario().getId().equals(usuarioId)) {
             throw new BusinessException("Acesso negado: Permissão insuficiente para verificar dados desta meta.");
         }
 
-        // TODO: Implementação pendente até a conclusão e integração do módulo de Transações.
-        Double totalGasto = 0.0;
+        // Reutiliza a consulta física das movimentações para avaliar o teto de gastos
+        Double somaDespesas = transacaoRepository.somarDespesasPorCategoriaEMesAno(
+                usuarioId,
+                meta.getCategoria().getId(),
+                meta.getMesAno()
+        );
+        Double totalGasto = Math.abs(somaDespesas != null ? somaDespesas : 0.0);
 
         if (totalGasto > meta.getValorLimite()) {
             return "ALERTA DE ESTOURO! Limite ultrapassado na categoria: " + meta.getCategoria().getNome();

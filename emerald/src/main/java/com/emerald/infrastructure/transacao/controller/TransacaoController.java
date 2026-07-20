@@ -59,4 +59,13 @@ public class TransacaoController {
         transacaoService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TransacaoResponseDTO> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody TransacaoRequestDTO request) {
+        // Atualiza os dados de uma transação existente e recalcula o saldo da conta correspondente.
+        TransacaoResponseDTO response = transacaoService.update(id, request);
+        return ResponseEntity.ok(response);
+    }
 }
