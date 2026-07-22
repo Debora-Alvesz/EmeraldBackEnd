@@ -3,6 +3,7 @@ package com.emerald.infrastructure.usuario.service;
 import com.emerald.infrastructure.usuario.dto.LoginRequestDTO;
 import com.emerald.infrastructure.usuario.dto.UsuarioRequestDTO;
 import com.emerald.infrastructure.usuario.dto.UsuarioResponseDTO;
+import com.emerald.infrastructure.usuario.dto.UsuarioUpdateDTO;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +23,7 @@ public interface UsuarioIService {
     UsuarioResponseDTO findById(UUID id);
 
     // Atualiza as informações de login e dados cadastrais de um usuário existente.
-    UsuarioResponseDTO update(UUID id, UsuarioRequestDTO request);
+    UsuarioResponseDTO update(UUID id, UsuarioUpdateDTO request);
 
     // Remove fisicamente o registro do usuário do banco de dados do sistema.
     void delete(UUID id);

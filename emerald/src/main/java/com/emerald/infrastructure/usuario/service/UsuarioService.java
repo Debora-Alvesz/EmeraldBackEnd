@@ -6,6 +6,7 @@ import com.emerald.infrastructure.perfil.repository.PerfilRepository;
 import com.emerald.infrastructure.usuario.dto.LoginRequestDTO;
 import com.emerald.infrastructure.usuario.dto.UsuarioRequestDTO;
 import com.emerald.infrastructure.usuario.dto.UsuarioResponseDTO;
+import com.emerald.infrastructure.usuario.dto.UsuarioUpdateDTO;
 import com.emerald.infrastructure.usuario.entity.Usuario;
 import com.emerald.infrastructure.usuario.mapper.UsuarioMapper;
 import com.emerald.infrastructure.usuario.repository.UsuarioRepository;
@@ -81,7 +82,7 @@ public class UsuarioService implements UsuarioIService {
 
     @Override
     @Transactional
-    public UsuarioResponseDTO update(UUID id, UsuarioRequestDTO request) {
+    public UsuarioResponseDTO update(UUID id, UsuarioUpdateDTO request) {
         // Verifica a existência do usuário para validação e modificação do estado da entidade.
         Usuario usuarioExistente = usuarioRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o ID: " + id));
@@ -96,7 +97,11 @@ public class UsuarioService implements UsuarioIService {
 
         usuarioExistente.setNome(request.getNome());
         usuarioExistente.setEmail(request.getEmail());
-        usuarioExistente.setSenha(request.getSenha());
+
+// Atualiza a senha SOMENTE se ela foi informada na requisição
+        if (request.getSenha() != null && !request.getSenha().isBlank()) {
+            usuarioExistente.setSenha(request.getSenha());
+        }
 
         Usuario usuarioAtualizado = usuarioRepository.save(usuarioExistente);
         return usuarioMapper.toResponseDto(usuarioAtualizado);

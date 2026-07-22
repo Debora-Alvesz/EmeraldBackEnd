@@ -3,6 +3,7 @@ package com.emerald.infrastructure.usuario.controller;
 import com.emerald.infrastructure.usuario.dto.LoginRequestDTO;
 import com.emerald.infrastructure.usuario.dto.UsuarioRequestDTO;
 import com.emerald.infrastructure.usuario.dto.UsuarioResponseDTO;
+import com.emerald.infrastructure.usuario.dto.UsuarioUpdateDTO;
 import com.emerald.infrastructure.usuario.service.UsuarioIService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,8 +53,7 @@ public class UsuarioController {
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> update(
             @PathVariable UUID id,
-            @Valid @RequestBody UsuarioRequestDTO request) {
-        // Atualiza as informações cadastrais e dados de login de um usuário existente.
+            @Valid @RequestBody UsuarioUpdateDTO request) {
         UsuarioResponseDTO usuarioAtualizado = usuarioService.update(id, request);
         return ResponseEntity.ok(usuarioAtualizado);
     }
