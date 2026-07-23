@@ -1,8 +1,12 @@
 package com.emerald.infrastructure.contabancaria.entity;
 
+import com.emerald.infrastructure.contabancaria.entity.enums.TipoConta;
 import com.emerald.infrastructure.usuario.entity.Usuario;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,19 +28,21 @@ import java.util.UUID;
 public class ContaBancaria {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID) // Gera automaticamente o UUID padrão do projeto
+    @GeneratedValue(strategy = GenerationType.UUID) // Gera automaticamente o UUID
     private UUID id;
 
-    @Column(nullable = false, length = 50) // Nome descritivo (ex: "Nubank", "Carteira", "Poupança")
+    @Column(nullable = false, length = 50) // Nome descritivo (ex: "Nubank", "Itaú")
     private String nomeConta;
 
-    @Column(nullable = false) // Saldo inicial ou saldo atual da conta
+    @Column(nullable = false) // Saldo atual da conta
     private BigDecimal saldo;
 
-    @Column(nullable = false, length = 30) // Tipo da conta (ex: "CORRENTE", "POUPANCA", "DINHEIRO")
-    private String tipoConta;
+    //Usando o Enum e avisando o JPA
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private TipoConta tipoConta;
 
     @ManyToOne // Muitas contas bancárias pertencem a um único Usuário
-    @JoinColumn(name = "usuario_id", nullable = false) // Cria a FK (Chave Estrangeira) apontando para o usuário dono da conta
+    @JoinColumn(name = "usuario_id", nullable = false) // Chave Estrangeira (FK)
     private Usuario usuario;
 }

@@ -1,5 +1,6 @@
 package com.emerald.infrastructure.contabancaria.dto;
 
+import com.emerald.infrastructure.contabancaria.entity.enums.TipoConta;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -23,9 +24,8 @@ public class ContaBancariaRequestDTO {
     @PositiveOrZero(message = "O saldo inicial não pode ser negativo.")
     private BigDecimal saldo;
 
-    @NotBlank(message = "O tipo da conta é obrigatório.")
-    @Size(max = 30, message = "O tipo da conta não pode passar de 30 caracteres.")
-    private String tipoConta; // Ex: CORRENTE, POUPANCA, DINHEIRO
+    @NotNull(message = "O tipo da conta é obrigatório.")
+    private TipoConta tipoConta; // Ex: CORRENTE, POUPANCA, DINHEIRO
 
     @NotNull(message = "O ID do usuário proprietário é obrigatório.")
     private UUID usuarioId; // Vincula a conta ao usuário dono

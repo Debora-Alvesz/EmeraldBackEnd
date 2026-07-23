@@ -33,6 +33,8 @@ public class ContaBancariaMapper {
         dto.setId(conta.getId());
         dto.setNomeConta(conta.getNomeConta());
         dto.setSaldo(conta.getSaldo());
+
+        // Agora isso funciona perfeitamente pois ambos são TipoConta
         dto.setTipoConta(conta.getTipoConta());
 
         // Mapeia apenas o ID do usuário dono da conta em vez de expor a entidade Usuário inteira

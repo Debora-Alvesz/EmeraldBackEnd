@@ -86,9 +86,11 @@ public class ContaBancariaService implements ContaBancariaIService {
         if (request.getNomeConta() != null && !request.getNomeConta().isBlank()) {
             contaExistente.setNomeConta(request.getNomeConta());
         }
-        if (request.getTipoConta() != null && !request.getTipoConta().isBlank()) {
+
+        if (request.getTipoConta() != null) {
             contaExistente.setTipoConta(request.getTipoConta());
         }
+
         if (request.getSaldo() != null) {
             contaExistente.setSaldo(request.getSaldo());
         }
