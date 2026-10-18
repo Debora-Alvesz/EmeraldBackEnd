@@ -10,12 +10,10 @@ import com.emerald.infrastructure.perfil.repository.PerfilRepository;
 import com.emerald.infrastructure.usuario.entity.Usuario;
 import com.emerald.infrastructure.usuario.repository.UsuarioRepository;
 
-// Importações do JUnit 5 (Jupiter) - o framework de testes em si.
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-// Importações do Spring para teste de INTEGRAÇÃO (sobe o contexto real da aplicação).
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,41 +21,28 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-// Importação estática dos métodos de asserção do JUnit (assertEquals, assertThrows, etc.)
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Teste de INTEGRAÇÃO do CategoriaService.
+ * Classe de Testes de Integração para a camada CategoriaService.
  *
- * Diferença para um teste unitário (com @Mock):
- * Aqui NÃO fingimos as dependências. O Spring sobe o contexto real da aplicação
- * (@SpringBootTest) e o CategoriaService usa os repositórios JPA de verdade,
- * que leem e gravam no banco Postgres real (Supabase) configurado no application.properties.
- * Isso prova que o CRUD funciona de ponta a ponta, não só que a lógica do service
- * "chama os métodos certos" como faríamos com mocks.
+ * Anotação 1: @SpringBootTest
+ * Carrega o contexto completo da aplicação Spring Boot, permitindo testar a integração
+ * real entre a camada Service e o banco de dados.
  *
- * ANOTAÇÃO 1: @SpringBootTest
- * Sobe o contexto completo do Spring (os mesmos beans que sobem quando a aplicação
- * roda de verdade). É isso que permite usar @Autowired para injetar o CategoriaService
- * e os repositórios reais, já conectados ao banco.
- *
- * ANOTAÇÃO 2: @Transactional (na classe)
- * Faz CADA método de teste rodar dentro de uma transação que é DESFEITA (rollback)
- * automaticamente assim que o teste termina. Ou seja: o teste grava dados de verdade
- * no Postgres durante a execução (por isso conseguimos consultar e validar), mas no
- * final tudo volta como estava antes. Sem isso, cada execução deixaria usuários e
- * categorias "lixo" acumulados no banco do Supabase.
+ * Anotação 2: @Transactional
+ * Garante o isolamento dos testes executando cada método dentro de uma transação com
+ * rollback automático ao final. Permite consultar e gravar dados reais sem poluir o banco.
  */
 @SpringBootTest
 @Transactional
-@DisplayName("Testes de integração do CategoriaService (banco real)")
+@DisplayName("Testes de Integração - CategoriaService (Banco Real)")
 class CategoriaServiceTest {
 
     /*
-     * ANOTAÇÃO 3: @Autowired
-     * Pede ao Spring para injetar a instância REAL desses beans (não um mock).
-     * O categoriaService aqui é o objeto de produção, com os repositórios de
-     * verdade dentro dele.
+     * Anotação 3: @Autowired
+     * Injeta automaticamente as instâncias reais registradas pelo Spring
+     * (serviço e repositórios JPA de banco de dados).
      */
     @Autowired
     private CategoriaService categoriaService;
@@ -71,16 +56,14 @@ class CategoriaServiceTest {
     @Autowired
     private PerfilRepository perfilRepository;
 
-    // Dados reais criados e salvos no banco antes de cada teste.
     private Usuario usuario;
     private UUID usuarioId;
     private CategoriaRequestDTO requestDTO;
 
     /**
-     * ANOTAÇÃO 4: @BeforeEach
-     * Roda antes de CADA teste. Aqui montamos o "cenário mínimo" que todo teste
-     * precisa: um Perfil válido e um Usuario válido já salvos no banco, porque
-     * Usuario exige um Perfil (nullable = false) e Categoria exige um Usuario.
+     * Anotação 4: @BeforeEach
+     * Executa antes de cada teste para preparar o cenário básico do banco:
+     * cria um usuário válido e inicializa um DTO de requisição padrão.
      */
     @BeforeEach
     void setUp() {
@@ -94,11 +77,9 @@ class CategoriaServiceTest {
     }
 
     /**
-     * Método auxiliar (não é um teste): cria e salva de verdade, no banco,
-     * um Perfil (reaproveitando um já existente com o mesmo nome, se houver,
-     * para não violar a constraint "unique" de nomePerfil) e um Usuario vinculado
-     * a ele. Usamos um e-mail aleatório (UUID) para nunca colidir com o "unique"
-     * do campo email, já que este método pode ser chamado várias vezes.
+     * Método auxiliar de infraestrutura.
+     * Garante a integridade referencial salvando um Perfil e um Usuario no banco.
+     * Utiliza e-mail dinâmico (UUID) para evitar erro de violação de chave única.
      */
     private Usuario criarUsuarioNoBanco() {
         Perfil perfil = perfilRepository.findByNomePerfil("USER_TESTE")
@@ -118,9 +99,8 @@ class CategoriaServiceTest {
     }
 
     /**
-     * Método auxiliar: grava uma categoria de verdade no banco, vinculada
-     * ao usuário informado. Usado pelos testes de findById/update/delete,
-     * que precisam de uma categoria já existente para trabalhar em cima dela.
+     * Método auxiliar para testes de leitura, alteração e exclusão.
+     * Persiste uma categoria diretamente no banco vinculada ao usuário informado.
      */
     private Categoria criarCategoriaNoBanco(Usuario dono) {
         Categoria categoria = new Categoria();
@@ -130,37 +110,36 @@ class CategoriaServiceTest {
         return categoriaRepository.save(categoria);
     }
 
-    // ---------------------------------------------------------------
-    // Testes do método save()
-    // ---------------------------------------------------------------
+    // ===============================================================
+    // Operação: CREATE (save)
+    // ===============================================================
 
     /**
-     * ANOTAÇÃO 5 (repetida em cada caso de teste): @Test
+     * Anotação 5: @Test
+     * Identifica o método como um caso de teste executável pelo runner do JUnit.
      */
     @Test
-    @DisplayName("Deve salvar categoria de verdade no banco quando os dados são válidos")
+    @DisplayName("Deve salvar categoria no banco quando os dados são válidos")
     void deveSalvarCategoriaComSucesso() {
-        // ACT: chama o service real, que por sua vez grava no Postgres de verdade.
+        // Executa a criação da categoria via Service
         CategoriaResponseDTO resultado = categoriaService.save(requestDTO);
 
-        // ASSERT: confere o retorno do service.
+        // Valida o retorno do DTO
         assertNotNull(resultado.getId());
         assertEquals("DESPESA", resultado.getTipo());
 
-        // Prova real de integração: buscamos DIRETO no banco (sem passar pelo service)
-        // para confirmar que o registro realmente foi persistido.
+        // Consulta diretamente o banco para comprovar a persistência física do registro
         Categoria categoriaSalva = categoriaRepository.findById(resultado.getId()).orElseThrow();
         assertEquals("Alimentação", categoriaSalva.getNome());
         assertEquals(usuarioId, categoriaSalva.getUsuario().getId());
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao salvar quando usuarioId é nulo")
+    @DisplayName("Deve lançar exceção ao salvar com usuarioId nulo")
     void deveLancarExcecaoQuandoUsuarioIdNuloAoSalvar() {
         requestDTO.setUsuarioId(null);
 
-        // assertThrows: verifica se o método lança a exceção esperada,
-        // SEM nada ser gravado no banco (a validação barra antes).
+        // Valida se o serviço lança a exceção esperada antes de tentar gravar no banco
         BusinessException excecao = assertThrows(
                 BusinessException.class,
                 () -> categoriaService.save(requestDTO)
@@ -170,7 +149,7 @@ class CategoriaServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao salvar quando tipo é inválido")
+    @DisplayName("Deve lançar exceção ao salvar com tipo inválido")
     void deveLancarExcecaoQuandoTipoInvalidoAoSalvar() {
         requestDTO.setTipo("INVESTIMENTO");
 
@@ -183,20 +162,19 @@ class CategoriaServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao salvar quando usuário não existe no banco")
+    @DisplayName("Deve lançar exceção ao salvar para usuário inexistente")
     void deveLancarExcecaoQuandoUsuarioNaoEncontradoAoSalvar() {
-        // Um UUID aleatório quase certamente não existe na tabela tb_usuarios.
         requestDTO.setUsuarioId(UUID.randomUUID());
 
         assertThrows(BusinessException.class, () -> categoriaService.save(requestDTO));
     }
 
-    // ---------------------------------------------------------------
-    // Testes do método findByUsuarioId()
-    // ---------------------------------------------------------------
+    // ===============================================================
+    // Operação: READ (findByUsuarioId / findById)
+    // ===============================================================
 
     @Test
-    @DisplayName("Deve retornar do banco a lista de categorias do usuário")
+    @DisplayName("Deve listar todas as categorias pertencentes ao usuário")
     void deveRetornarListaDeCategoriasDoUsuario() {
         criarCategoriaNoBanco(usuario);
         criarCategoriaNoBanco(usuario);
@@ -208,17 +186,13 @@ class CategoriaServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando usuarioId é nulo em findByUsuarioId")
+    @DisplayName("Deve lançar exceção ao listar categorias com usuarioId nulo")
     void deveLancarExcecaoQuandoUsuarioIdNuloAoListar() {
         assertThrows(BusinessException.class, () -> categoriaService.findByUsuarioId(null));
     }
 
-    // ---------------------------------------------------------------
-    // Testes do método findById()
-    // ---------------------------------------------------------------
-
     @Test
-    @DisplayName("Deve retornar categoria do banco quando ela pertence ao usuário")
+    @DisplayName("Deve buscar categoria por ID quando pertencer ao usuário")
     void deveRetornarCategoriaQuandoPertenceAoUsuario() {
         Categoria categoriaSalva = criarCategoriaNoBanco(usuario);
 
@@ -229,13 +203,12 @@ class CategoriaServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção (IDOR) ao buscar categoria de outro usuário")
+    @DisplayName("Deve lançar exceção de segurança ao buscar categoria de outro usuário")
     void deveLancarExcecaoAoBuscarCategoriaDeOutroUsuario() {
         Categoria categoriaSalva = criarCategoriaNoBanco(usuario);
         Usuario outroUsuario = criarUsuarioNoBanco();
 
-        // Testamos a proteção contra IDOR: a categoria pertence a "usuario",
-        // mas estamos consultando como se fôssemos "outroUsuario" -> deve negar acesso.
+        // Valida o controle de acesso (IDOR) impedindo a leitura de recursos alheios
         BusinessException excecao = assertThrows(
                 BusinessException.class,
                 () -> categoriaService.findById(categoriaSalva.getId(), outroUsuario.getId())
@@ -245,7 +218,7 @@ class CategoriaServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando categoria não existe no banco")
+    @DisplayName("Deve lançar exceção ao buscar categoria inexistente por ID")
     void deveLancarExcecaoQuandoCategoriaNaoEncontradaPorId() {
         assertThrows(
                 BusinessException.class,
@@ -253,12 +226,12 @@ class CategoriaServiceTest {
         );
     }
 
-    // ---------------------------------------------------------------
-    // Testes do método update()
-    // ---------------------------------------------------------------
+    // ===============================================================
+    // Operação: UPDATE (update)
+    // ===============================================================
 
     @Test
-    @DisplayName("Deve atualizar categoria no banco quando pertence ao usuário")
+    @DisplayName("Deve atualizar dados da categoria no banco com sucesso")
     void deveAtualizarCategoriaComSucesso() {
         Categoria categoriaSalva = criarCategoriaNoBanco(usuario);
 
@@ -269,14 +242,14 @@ class CategoriaServiceTest {
 
         categoriaService.update(categoriaSalva.getId(), usuarioId, atualizacao);
 
-        // Buscamos direto no banco para confirmar que a alteração foi persistida de verdade.
+        // Valida no banco se as alterações foram alteradas e salvas de fato
         Categoria categoriaAtualizada = categoriaRepository.findById(categoriaSalva.getId()).orElseThrow();
         assertEquals("Transporte", categoriaAtualizada.getNome());
         assertEquals("RECEITA", categoriaAtualizada.getTipo());
     }
 
     @Test
-    @DisplayName("Deve lançar exceção (IDOR) ao atualizar categoria de outro usuário")
+    @DisplayName("Deve lançar exceção de segurança ao tentar atualizar categoria de outro usuário")
     void deveLancarExcecaoAoAtualizarCategoriaDeOutroUsuario() {
         Categoria categoriaSalva = criarCategoriaNoBanco(usuario);
         Usuario outroUsuario = criarUsuarioNoBanco();
@@ -286,29 +259,29 @@ class CategoriaServiceTest {
                 () -> categoriaService.update(categoriaSalva.getId(), outroUsuario.getId(), requestDTO)
         );
 
-        // Confirma que o nome original NÃO foi alterado no banco, já que a operação foi negada.
+        // Confirma que os dados originais no banco permaneceram inalterados
         Categoria categoriaInalterada = categoriaRepository.findById(categoriaSalva.getId()).orElseThrow();
         assertEquals("Categoria Teste", categoriaInalterada.getNome());
     }
 
-    // ---------------------------------------------------------------
-    // Testes do método delete()
-    // ---------------------------------------------------------------
+    // ===============================================================
+    // Operação: DELETE (delete)
+    // ===============================================================
 
     @Test
-    @DisplayName("Deve excluir categoria do banco quando pertence ao usuário")
+    @DisplayName("Deve remover categoria do banco com sucesso")
     void deveExcluirCategoriaComSucesso() {
         Categoria categoriaSalva = criarCategoriaNoBanco(usuario);
         UUID categoriaId = categoriaSalva.getId();
 
         categoriaService.delete(categoriaId, usuarioId);
 
-        // Confirma, direto no banco, que o registro deixou de existir.
+        // Confirma que o registro deixou de existir na tabela do banco
         assertTrue(categoriaRepository.findById(categoriaId).isEmpty());
     }
 
     @Test
-    @DisplayName("Deve lançar exceção (IDOR) ao excluir categoria de outro usuário")
+    @DisplayName("Deve lançar exceção de segurança ao tentar excluir categoria de outro usuário")
     void deveLancarExcecaoAoExcluirCategoriaDeOutroUsuario() {
         Categoria categoriaSalva = criarCategoriaNoBanco(usuario);
         Usuario outroUsuario = criarUsuarioNoBanco();
@@ -318,12 +291,12 @@ class CategoriaServiceTest {
                 () -> categoriaService.delete(categoriaSalva.getId(), outroUsuario.getId())
         );
 
-        // Confirma que a categoria CONTINUA no banco, já que a exclusão foi negada.
+        // Confirma que a categoria permanece intacta no banco de dados
         assertTrue(categoriaRepository.findById(categoriaSalva.getId()).isPresent());
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao excluir quando ids são nulos")
+    @DisplayName("Deve lançar exceção ao tentar excluir com IDs nulos")
     void deveLancarExcecaoQuandoIdsNulosAoExcluir() {
         assertThrows(BusinessException.class, () -> categoriaService.delete(null, usuarioId));
         assertThrows(BusinessException.class, () -> categoriaService.delete(UUID.randomUUID(), null));
