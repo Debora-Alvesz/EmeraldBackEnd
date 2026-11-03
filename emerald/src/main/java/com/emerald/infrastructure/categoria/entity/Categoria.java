@@ -32,6 +32,12 @@ public class Categoria {
     @Column(nullable = false, length = 20) // Tipo da categoria (Estritamente "RECEITA" ou "DESPESA")
     private String tipo;
 
+    @Column(length = 255) // Descrição detalhada da categoria
+    private String descricao;
+
+    @Column(length = 7) // Cor para exibição no frontend (ex: "#FF5733")
+    private String cor;
+
     @ManyToOne // Muitas categorias pertencem a um único Usuário
     @JoinColumn(name = "usuario_id", nullable = false) // FK que isola as categorias por usuário
     private Usuario usuario;

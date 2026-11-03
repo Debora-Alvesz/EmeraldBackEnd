@@ -17,6 +17,8 @@ public class CategoriaMapper {
         Categoria categoria = new Categoria();
         categoria.setNome(dto.getNome());
         categoria.setTipo(dto.getTipo().toUpperCase()); // Salva sempre em maiúsculo para manter o padrão (RECEITA/DESPESA)
+        categoria.setDescricao(dto.getDescricao()); // Adicionado
+        categoria.setCor(dto.getCor());             // Adicionado
 
         // O relacionamento com o Usuário é injetado diretamente no Service por motivos de segurança
         return categoria;
@@ -32,6 +34,8 @@ public class CategoriaMapper {
         dto.setId(categoria.getId());
         dto.setNome(categoria.getNome());
         dto.setTipo(categoria.getTipo());
+        dto.setDescricao(categoria.getDescricao()); // Adicionado
+        dto.setCor(categoria.getCor());             // Adicionado
 
         // Mapeia apenas o ID do usuário para proteger os dados sensíveis da entidade Usuario
         if (categoria.getUsuario() != null) {

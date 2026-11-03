@@ -47,6 +47,7 @@ public class CategoriaService implements CategoriaIService {
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado com o ID fornecido."));
 
+        // O mapper cuidará de converter os novos campos (descricao e cor) automaticamente
         Categoria categoria = categoriaMapper.toEntity(request);
         categoria.setTipo(tipoUpper);
         categoria.setUsuario(usuario);
@@ -108,6 +109,8 @@ public class CategoriaService implements CategoriaIService {
 
         categoria.setNome(request.getNome());
         categoria.setTipo(tipoUpper);
+        categoria.setDescricao(request.getDescricao()); // Adicionado
+        categoria.setCor(request.getCor());             // Adicionado
 
         Categoria categoriaAtualizada = categoriaRepository.save(categoria);
         return categoriaMapper.toResponseDto(categoriaAtualizada);
